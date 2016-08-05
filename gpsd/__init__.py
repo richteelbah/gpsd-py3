@@ -1,10 +1,13 @@
+# REF: http://catb.org/gpsd/gpsd_json.html
 import socket
 import json
 import logging
+import datetime as dt
 
 gpsd_socket = None
 gpsd_stream = None
 state = {}
+gpsTimeFormat = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 
 def _parse_state_packet(json_data):
@@ -34,6 +37,7 @@ class GpsResponse(object):
         self.hspeed = 0
         self.climb = 0
         self.error = {}
+        self.time = ''
 
     @classmethod
     def from_json(cls, packet):
@@ -62,6 +66,7 @@ class GpsResponse(object):
                 'x': last_tpv['epx'] if 'epx' in last_tpv else 0,
                 'y': last_tpv['epy'] if 'epy' in last_tpv else 0
             }
+            result.time = last_tpv['time']
 
         if last_tpv['mode'] >= 3:
             result.alt = last_tpv['alt']
@@ -115,6 +120,21 @@ class GpsResponse(object):
         if self.mode < 2:
             raise NoFixError("Needs at least 2D fix")
         return max(self.error['x'], self.error['y']), self.error['v']
+
+    def time_utc(self):
+        global gpsTimeFormat
+        """ Get the GPS time UTC in raw format """
+        if self.mode < 2:
+            raise NoFixError("Needs at least 2D fix")
+
+        return  dt.datetime.strptime(self.time, gpsTimeFormat)
+
+    def time_local(self):
+        """ Get the GPS time in local timezone """
+        if self.mode < 2:
+            raise NoFixError("Needs at least 2D fix")
+
+        return self.time_utc().replace(tzinfo=dt.timezone.utc).astimezone(tz=None) # utc -> local
 
     def map_url(self):
         """ Get a openstreetmap url for the current position
