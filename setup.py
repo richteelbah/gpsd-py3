@@ -6,7 +6,7 @@ setup(
         name='gpsd-py3',
         version='0.2.0',
         packages=['gpsd'],
-        url='https://github.com/richteelbah/gpsd-py3',
+        url='https://github.com/MartijnBraam/gpsd-py3',
         license='MIT',
         author='Martijn Braam',
         author_email='martijn@brixit.nl',
