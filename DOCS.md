@@ -31,7 +31,7 @@ Description and information copied from [http://catb.org/gpsd/gpsd_json.html](ht
 	- *Description:* Speed over ground, meters per second
 	- *Availability:* mode >= 2
 	- *Data Type:* float
-- **time**
+- **time_iso**
 	- *Description:* Time/date stamp in ISO8601 format, UTC. May have a fractional part of up to .001sec precision May be absent if mode is not 2 or 3.
 	- *Availability:* mode >= 2
 	- *Data Type:* string
@@ -73,15 +73,10 @@ Description and information copied from [http://catb.org/gpsd/gpsd_json.html](ht
 	- *Availability:* mode >= 2
 	- *Parameters:* None
 	- *Return Type:* tuple (x-y plane, z direction)
-- **time_utc**
-	- *Description:* Get the GPS time UTC
+- **time**
+	- *Description:* Get the GPS time UTC or Local
 	- *Availability:* mode >= 2
-	- *Parameters:* None
-	- *Return Type:* datetime
-- **time_local**
-	- *Description:* Get the GPS time in local timezone
-	- *Availability:* mode >= 2
-	- *Parameters:* None
+	- *Parameters:* local_time=False
 	- *Return Type:* datetime
 - **map_url**
 	- *Description:* Get a openstreetmap url for the current position
@@ -145,94 +140,73 @@ Information on Available Functions
 
 ## Sample Code ##
 
-```python
-#!/usr/bin/env python3
-
-import gpsd
-
-# Connect to the local gpsd
-gpsd.connect()
-
-# Connect somewhere else
-gpsd.connect()
-
-# Get gps position
-packet = gpsd.get_current()
-
-# See the inline docs for GpsResponse for the available data
-print(" ************ PROPERTIES ************* ")
-print("  Mode: " + str(packet.mode))
-print("Satellites: " + str(packet.sats))
-if packet.mode >= 2:
-print("  Latitude: " + str(packet.lat))
-print(" Longitude: " + str(packet.lon))
-print(" Track: " + str(packet.track))
-print("  Horizontal Speed: " + str(packet.hspeed))
-print(" Time: " + str(packet.time))
-print(" Error: " + str(packet.error))
-else:
-print("  Latitude: NOT AVAILABLE")
-print(" Longitude: NOT AVAILABLE")
-print(" Track: NOT AVAILABLE")
-print("  Horizontal Speed: NOT AVAILABLE")
-print(" Error: NOT AVAILABLE")
-
-if packet.mode >= 3:
-print("  Altitude: " + str(packet.alt))
-print(" Climb: " + str(packet.climb))
-else:
-print("  Altitude: NOT AVAILABLE")
-print(" Climb: NOT AVAILABLE")
-
-print(" ************** METHODS ************** ")
-if packet.mode >= 2:
-print("  Location: " + str(packet.position()))
-print(" Speed: " + str(packet.speed()))
-print("Position Precision: " + str(packet.position_precision()))
-print("  Time UTC: " + str(packet.time_utc()))
-print("Time Local: " + str(packet.time_local()))
-print("   Map URL: " + str(packet.map_url()))
-else:
-print("  Location: NOT AVAILABLE")
-print(" Speed: NOT AVAILABLE")
-print("Position Precision: NOT AVAILABLE")
-print("  Time UTC: NOT AVAILABLE")
-print("Time Local: NOT AVAILABLE")
-print("   Map URL: NOT AVAILABLE")
-
-if packet.mode >= 3:
-print("  Altitude: " + str(packet.altitude()))
-# print("  Movement: " + str(packet.movement()))
-# print("  Speed Vertical: " + str(packet.speed_vertical()))
-else:
-print("  Altitude: NOT AVAILABLE")
-# print("  Movement: NOT AVAILABLE")
-# print(" Speed Vertical: NOT AVAILABLE")
-
-print(" ************* FUNCTIONS ************* ")
-print("Device: " + str(gpsd.device()))
-```
-
-
-###Sample Output##
-     ************ PROPERTIES *************
-                  Mode: 3
-            Satellites: 10
-              Latitude: 39.8333333
-             Longitude: -98.585522
-                 Track: 237.31
-      Horizontal Speed: 0.0
-                  Time: 2016-08-05T03:02:13.000Z
-                 Error: {'v': 31.97, 't': 0.005, 'x': 10.055, 'c': (63.94,), 's': 35 .16, 'y': 17.58}
-              Altitude: 100.3
-                 Climb: 0.0
-     ************** METHODS **************
-               Location: (39.8333333, -98.585522)
-                  Speed: 0
-     Position Precision: (17.58, 31.97)
-               Time UTC: 2016-08-05 03:02:13
-             Time Local: 2016-08-04 23:02:13-04:00
-                Map URL: http://www.openstreetmap.org/?mlat=39.8333333&mlon=-98.585522&zoom=15
-               Altitude: 100.3
-     ************* FUNCTIONS *************
-                 Device: {'driver': 'MTK-3301', 'path': '/dev/ttyS0', 'speed': 9600}
+	#!/usr/bin/env python3
+	
+	import gpsd
+	import sys
+	
+	# Connect to the local gpsd
+	gpsd.connect()
+	
+	# Connect somewhere else
+	gpsd.connect()
+	
+	# Get gps position
+	try:
+	    packet = gpsd.get_current()
+	except Exception as e:
+	    print("ERROR: Error occured while parsing JSON or expected key or attribute missing")
+	    sys.exit()
+	
+	# See the inline docs for GpsResponse for the available data
+	print(" ************ PROPERTIES ************* ")
+	print("              Mode: {}".format(packet.mode))
+	print("        Satellites: {}".format(packet.sats))
+	if packet.mode >= 2:
+	    print("          Latitude: {}".format(packet.lat))
+	    print("         Longitude: {}".format(packet.lon))
+	    print("             Track: {}".format(packet.track))
+	    print("  Horizontal Speed: {}".format(packet.hspeed))
+	    print("              Time: {}".format(packet.time_iso))
+	    print("             Error: {}".format(packet.error))
+	else:
+	    print("          Latitude: NOT AVAILABLE")
+	    print("         Longitude: NOT AVAILABLE")
+	    print("             Track: NOT AVAILABLE")
+	    print("  Horizontal Speed: NOT AVAILABLE")
+	    print("             Error: NOT AVAILABLE")
+	    
+	if packet.mode >= 3:
+	    print("          Altitude: {}".format(packet.alt))
+	    print("             Climb: {}".format(packet.climb))
+	else:
+	    print("          Altitude: NOT AVAILABLE")
+	    print("             Climb: NOT AVAILABLE")
+	
+	print(" ************** METHODS ************** ")
+	if packet.mode >= 2:
+	    print("          Location: {}".format(packet.position()))
+	    print("             Speed: {}".format(packet.speed()))
+	    print("Position Precision: {}".format(packet.position_precision()))
+	    print("          Time UTC: {}".format(packet.time()))
+	    print("        Time Local: {}".format(packet.time(local_time=True)))
+	    print("           Map URL: {}".format(packet.map_url()))
+	else:
+	    print("          Location: NOT AVAILABLE")
+	    print("             Speed: NOT AVAILABLE")
+	    print("Position Precision: NOT AVAILABLE")
+	    print("          Time UTC: NOT AVAILABLE")
+	    print("        Time Local: NOT AVAILABLE")
+	    print("           Map URL: NOT AVAILABLE")
+	    
+	if packet.mode >= 3:
+	    print("          Altitude: {}".format(packet.altitude()))
+	    print("          Movement: {}".format(packet.movement()))
+	    print("      Speed Vertical: {}".format(packet.speed_vertical()))
+	else:
+	    print("          Altitude: NOT AVAILABLE")
+	    print("          Movement: NOT AVAILABLE")
+	    print("     Speed Vertical: NOT AVAILABLE")
+	
+	print(" ************* FUNCTIONS ************* ")
+	print("            Device: {}".format(gpsd.device()))

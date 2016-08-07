@@ -73,7 +73,7 @@ class GpsResponse(object):
         self.track = 0
         self.hspeed = 0
         self.climb = 0
-        self.time = ''
+        self.time_iso = ''
         self.error = {}
 
     @classmethod
@@ -95,7 +95,7 @@ class GpsResponse(object):
             result.lat = last_tpv['lat']
             result.track = last_tpv['track']
             result.hspeed = last_tpv['speed']
-            result.time = last_tpv['time']
+            result.time_iso = last_tpv['time']
             result.error = {
                 'c': 0,
                 's': last_tpv['eps'] if 'eps' in last_tpv else 0,
@@ -155,7 +155,7 @@ class GpsResponse(object):
         """
         if self.mode < 2:
             raise NoFixError("Needs at least 2D fix")
-        if abs(self.climb) < self.error['c']:
+        if abs(self.climb) < self.error['c'][0]:
             return 0
         else:
             return self.climb
@@ -204,7 +204,8 @@ class GpsResponse(object):
         """
         if self.mode < 2:
             raise NoFixError("Needs at least 2D fix")
-        time = datetime.datetime.strptime(self.time, gpsTimeFormat)
+
+        time = datetime.datetime.strptime(self.time_iso, gpsTimeFormat)
 
         if local_time:
             time = time.replace(tzinfo=datetime.timezone.utc).astimezone()
