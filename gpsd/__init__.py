@@ -251,6 +251,11 @@ def connect(host="127.0.0.1", port=2947):
         parsed = json.loads(raw)
         _parse_state_packet(parsed)
 
+def disconnect():
+    global gpsd_socket
+    gpsd_socket.shutdown()
+    gpsd_socket.close()
+    gpsd_socket = None
 
 def get_current():
     """ Poll gpsd for a new position

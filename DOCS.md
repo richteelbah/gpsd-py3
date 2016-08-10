@@ -122,6 +122,10 @@ Information on Available Functions
 	- *Description:* Connect to a GPSD instance
 	- *Parameters:* host="127.0.0.1", port=2947
 	- *Return Type:* None
+- **disconnect**
+	- *Description:* Close the connection to the GPSD instance
+	- *Parameters:* None
+	- *Return Type:* None
 - **get_current**
 	- *Description:* Poll gpsd for a new position
 	- *Parameters:* None
