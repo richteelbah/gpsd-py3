@@ -253,10 +253,17 @@ def connect(host="127.0.0.1", port=2947):
 
 
 def disconnect(how=socket.SHUT_RDWR):
-    global gpsd_socket
-    gpsd_socket.shutdown(how)
-    gpsd_socket.close()
-    gpsd_socket = None
+    global gpsd_socket, gpsd_stream
+    
+    if gpsd_stream != none:
+	    logging.debug("Disabling gps")
+	    gpsd_stream.write('?WATCH={"enable":false}\n')
+	    gpsd_stream.flush()
+    
+    if gpsd_socket != none:
+	    gpsd_socket.shutdown(how)
+	    gpsd_socket.close()
+	    gpsd_socket = None
 
 
 def get_current():
